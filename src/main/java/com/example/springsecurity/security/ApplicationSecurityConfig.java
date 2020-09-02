@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import static com.example.springsecurity.security.ApplicationUserRole.ADMIN;
+import static com.example.springsecurity.security.ApplicationUserRole.STUDENT;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -21,15 +24,30 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+
+        System.out.println(STUDENT.name());
+
         http
                 .authorizeRequests()
-                .antMatchers("/", "index", "/css/*", "/js/*") // permit without login
-                .permitAll()
+                .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
+                .antMatchers("/api/**").hasRole(STUDENT.name())
                 .anyRequest()
                 .authenticated()
                 .and()
-                .httpBasic();
+                .httpBasic();  // every request send username/password
     }
+//
+//    @Override
+//    protected void configure(HttpSecurity http) throws Exception {
+//        http
+//                .authorizeRequests()
+//                .antMatchers("/", "index", "/css/*", "/js/*") // permit without login
+//                .permitAll()
+//                .anyRequest()
+//                .authenticated()
+//                .and()
+//                .httpBasic();  // every request send username/password
+//    }
 
     @Bean
     @Override
@@ -37,10 +55,19 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         UserDetails annaSmithUser = User.builder()
                 .username("annasmith")
                 .password(passwordEncoder.encode("password"))
-                .roles("STUDENT")  // ROLE_STUDENT
+                .roles(STUDENT.name())  // ROLE_STUDENT
                 .build();
 
-        return new InMemoryUserDetailsManager(annaSmithUser);
+        UserDetails lindaUser = User.builder()
+                .username("linda")
+                .password(passwordEncoder.encode("password123"))
+                .roles(ADMIN.name()) // ROLE_ADMIN
+                .build();
+
+        return new InMemoryUserDetailsManager(
+                annaSmithUser,
+                lindaUser
+        );
     }
 
     //antMatchers
